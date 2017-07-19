@@ -6,6 +6,14 @@ from datetime import timedelta
 from django.utils import timezone
 from djfight.settings import BASE_DIR
 
+
+
+from paralleldots import set_api_key,get_api_key
+set_api_key('4SIAqg6RrhmTeABFxh2Tddlhhdx4U6fQ4NvTVzXGgXo')
+
+
+from paralleldots import sentiment
+
 from imgurpython import ImgurClient
 # Create your views here.
 YOUR_CLIENT_ID='15582b54b3d7de3'
@@ -136,8 +144,11 @@ def comment_view(request):
     if form.is_valid():
         post_id = form.cleaned_data.get('post').id
         comment_text = form.cleaned_data.get('comment_text')
-        comment = CommentModel.objects.create(user=user, post_id=post_id, comment_text=comment_text)
-        comment.save()
+       # review=form.cleaned_data.get('review')
+        comment = CommentModel.objects.create(user=user, post_id=post_id, comment_text=comment_text )
+        review=comment.save()
+        sentiment(review)
+
         return redirect('/feed/')
     else:
       return redirect('/feed/')
