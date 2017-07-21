@@ -144,11 +144,16 @@ def comment_view(request):
     if form.is_valid():
         post_id = form.cleaned_data.get('post').id
         comment_text = form.cleaned_data.get('comment_text')
-       # review=form.cleaned_data.get('review')
-        comment = CommentModel.objects.create(user=user, post_id=post_id, comment_text=comment_text )
-        review=comment.save()
-        sentiment(review)
-
+        rev = sentiment(str(comment_text))
+        review = rev["sentiment"] * 100
+        if review >= 60 and review <= 100:
+            review = "Positive Comment!"
+        elif review >= 40 and review < 60:
+            review = "Neutral Comment!"
+        elif review >= 0 and review < 40:
+            review = "Negative Comment!"
+        comment = CommentModel.objects.create(user=user, post_id=post_id, comment_text=comment_text,review=review)
+        comment.save()
         return redirect('/feed/')
     else:
       return redirect('/feed/')
