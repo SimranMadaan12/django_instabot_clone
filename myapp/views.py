@@ -6,11 +6,13 @@ from datetime import timedelta
 from django.utils import timezone
 from djfight.settings import BASE_DIR
 
+import sendgrid
+from keys import SENDGRID_API_KEY
+from sendgrid.helpers.mail import *
 
-
-from paralleldots import set_api_key,get_api_key
+from paralleldots import set_api_key
 set_api_key('4SIAqg6RrhmTeABFxh2Tddlhhdx4U6fQ4NvTVzXGgXo')
-
+import ctypes
 
 from paralleldots import sentiment
 
@@ -18,6 +20,8 @@ from imgurpython import ImgurClient
 # Create your views here.
 YOUR_CLIENT_ID='15582b54b3d7de3'
 YOUR_CLIENT_SECRET='dd94fb3866d40b8959c263145c0ca825a282d592'
+
+
 def signup_view(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
@@ -27,10 +31,31 @@ def signup_view(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             # saving data to DB
-            user = UserModel(name=name, password=make_password(password), email=email, username=username)
-            user.save()
-            return render(request, 'success.html')
-            # return redirect('login/')
+
+            if set('abcdefghijklmnopqrstuvwxyz').intersection(name) and set('abcdefghijklmnopqrstuvwxyz@_1234567890').intersection(username):
+                if len(username) > 4 and len(password) > 5:
+                    user = UserModel(name=name, password=make_password(password), email=email, username=username)
+                    user.save()
+                    #sg = sendgrid.SendGridAPIClient(apikey=(SENDGRID_API_KEY))
+                    #from_email = Email("simranmadaan64@gamil.com")
+                    #to_email = Email(form.cleaned_data['email'])
+                    #subject = "Welcome to Review book??"
+                    #content = Content("text/plain", "Thank you for signing up  with REVIEW BOOK. /n We provide best reviews on various products which makes easy choices for you./n Team , REVIEW BOOK.""  ??????")
+                    #mail = Mail(from_email, subject, to_email, content)
+                    #response = sg.client.mail.send.post(request_body=mail.get())
+                    #print(response.status_code)
+                    #print(response.body)
+                    #print(response.headers)
+                    ctypes.windll.user32.MessageBoxW(0, u"successfully signed up", u"success", 0)
+                    return render(request, 'login.html')
+                else:
+                    ctypes.windll.user32.MessageBoxW(0, u"invalid enteries. please try again", u"Error", 0)
+                    form = SignUpForm()
+            else:
+                 ctypes.windll.user32.MessageBoxW(0, u"invalid name/username", u"error", 0)
+
+
+                # return redirect('login/')
     else:
         form = SignUpForm()
 
@@ -55,7 +80,10 @@ def login_view(request):
                     response.set_cookie(key='session_token', value=token.session_token)
                     return response
                 else:
+                    ctypes.windll.user32.MessageBoxW(0, u"invalid username or password", u"Error", 0)
                     response_data['message'] = 'Incorrect Password! Please try again!'
+            else:
+                ctypes.windll.user32.MessageBoxW(0, u"invalid username or password", u"Error", 0)
 
     elif request.method == 'GET':
         form = LoginForm()
@@ -84,7 +112,7 @@ def post_view(request):
                 client = ImgurClient(YOUR_CLIENT_ID, YOUR_CLIENT_SECRET)
                 post.image_url = client.upload_from_path(path, anon=True)['link']
                 post.save()
-
+                ctypes.windll.user32.MessageBoxW(0, u"post successsfully created", u"SUCCESS", 0)
                 return redirect('/feed/')
 
         else:
@@ -130,7 +158,21 @@ def like_view(request):
             existing_like = LikeModel.objects.filter(post_id=post_id, user=user).first()
             if not existing_like:
                 LikeModel.objects.create(post_id=post_id, user=user)
+                d = LikeModel.objects.get(post=post_id, user=user)
+                to = d.user.email
+                sg = sendgrid.SendGridAPIClient(apikey=SENDGRID_API_KEY)
+                from_email = Email("ivjotofficial@gmail.com")
+                to_email = Email(to)
+                subject = "you have liked a picture"
+                content = Content("liked pic of " + str(existing_like))
+                mail = Mail(from_email, subject, to_email, content)
+                response = sg.client.mail.send.post(request_body=mail.get())
+                print(response.status_code)
+                print(response.body)
+                print(response.headers)
+                return redirect('/feed/')
             else:
+                print existing_like.user.username
                 existing_like.delete()
             return redirect('/feed/')
     else:
