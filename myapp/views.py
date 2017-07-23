@@ -1,11 +1,19 @@
 from django.shortcuts import render, redirect
+# from django we import forms that we want to view
+
+# models are imported.
+# in this file we are adding functionality to our project
 from forms import SignUpForm, LoginForm,PostForm,LikeForm,CommentForm
 from models import UserModel, SessionToken,PostModel,LikeModel,CommentModel
+
+# hashers library converts passwords to hashcode so that they are safe and increases privacy
 from django.contrib.auth.hashers import make_password, check_password
 from datetime import timedelta
+# datetime module is used to display / use local time on webpage
 from django.utils import timezone
 from djfight.settings import BASE_DIR
 
+# sendgrid api is used to send automated emails to users
 import sendgrid
 from keys import SENDGRID_API_KEY
 from sendgrid.helpers.mail import *
@@ -121,7 +129,7 @@ def post_view(request):
     else:
          return redirect('/login/')
 
-
+# For validating the session
 def check_validation(request):
     if request.COOKIES.get('session_token'):
         session = SessionToken.objects.filter(session_token=request.COOKIES.get('session_token')).first()
@@ -197,3 +205,9 @@ def comment_view(request):
       return redirect('/feed/')
   else:
     return redirect('/login')
+
+  def logout_view(request):  # for logging out the user
+      request.session.modified = True
+      response = redirect('/login/')
+      response.delete_cookie(key='session_token')
+      return response
