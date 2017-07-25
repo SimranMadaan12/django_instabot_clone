@@ -44,16 +44,7 @@ def signup_view(request):
                 if len(username) > 4 and len(password) > 5:
                     user = UserModel(name=name, password=make_password(password), email=email, username=username)
                     user.save()
-                    #sg = sendgrid.SendGridAPIClient(apikey=(SENDGRID_API_KEY))
-                    #from_email = Email("simranmadaan64@gamil.com")
-                    #to_email = Email(form.cleaned_data['email'])
-                    #subject = "Welcome to Review book??"
-                    #content = Content("text/plain", "Thank you for signing up  with REVIEW BOOK. /n We provide best reviews on various products which makes easy choices for you./n Team , REVIEW BOOK.""  ??????")
-                    #mail = Mail(from_email, subject, to_email, content)
-                    #response = sg.client.mail.send.post(request_body=mail.get())
-                    #print(response.status_code)
-                    #print(response.body)
-                    #print(response.headers)
+
                     ctypes.windll.user32.MessageBoxW(0, u"successfully signed up", u"success", 0)
                     return render(request, 'login.html')
                 else:
@@ -165,17 +156,18 @@ def like_view(request):
             post_id = form.cleaned_data.get('post').id
             existing_like = LikeModel.objects.filter(post_id=post_id, user=user).first()
             if not existing_like:
-                LikeModel.objects.create(post_id=post_id, user=user)
-                #sg = sendgrid.SendGridAPIClient(apikey=(SENDGRID_API_KEY))
-                #from_email = Email("simranmadaan64@gamil.com")
-                #to_email = Email(form.cleaned_data.get('email'))
-                #subject = "Welcome to Review book??"
-                #content = Content("text/plain", "Thank you for signing up  with REVIEW BOOK. ")
-                #mail = Mail(from_email, subject, to_email, content)
-                #response = sg.client.mail.send.post(request_body=mail.get())
-                #print(response.status_code)
-                #print(response.body)
-                #print(response.headers)
+                like = LikeModel.objects.create(post_id=post_id, user=user)
+                sg = sendgrid.SendGridAPIClient(apikey=(SENDGRID_API_KEY))
+                from_email = Email("simranmadaan64@gmail.com")
+                to_email = Email(like.post.user.email)
+                subject = "Welcome "
+                content = Content("text/plain", "Your post has been liked!")
+                mail = Mail(from_email, subject, to_email, content)
+                response = sg.client.mail.send.post(request_body=mail.get())
+                print(response.status_code)
+                print(response.body)
+                print(response.headers)
+
             else:
                 existing_like.delete()
             return redirect('/feed/')
@@ -200,13 +192,24 @@ def comment_view(request):
             review = "Negative Comment!"
         comment = CommentModel.objects.create(user=user, post_id=post_id, comment_text=comment_text,review=review)
         comment.save()
+        sg = sendgrid.SendGridAPIClient(apikey=(SENDGRID_API_KEY))
+        from_email = Email("simranmadaan64@gmail.com")
+        to_email = Email(comment.post.user.email)
+        subject = "Welcome "
+        content = Content("text/plain", "Someone commented on your post")
+        mail = Mail(from_email, subject, to_email, content)
+        response = sg.client.mail.send.post(request_body=mail.get())
+        print(response.status_code)
+        print(response.body)
+        print(response.headers)
         return redirect('/feed/')
+
     else:
       return redirect('/feed/')
   else:
     return redirect('/login')
 
-  def logout_view(request):  # for logging out the user
+def logout_view(request):  # for logging out the user
       request.session.modified = True
       response = redirect('/login/')
       response.delete_cookie(key='session_token')
