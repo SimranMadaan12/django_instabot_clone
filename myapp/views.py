@@ -30,7 +30,7 @@ YOUR_CLIENT_ID='15582b54b3d7de3'
 YOUR_CLIENT_SECRET='dd94fb3866d40b8959c263145c0ca825a282d592'
 
 
-def signup_view(request):
+def signup_view(request):  #function declaration which is used to show signup page to save the information of new user
     if request.method == "POST":
         form = SignUpForm(request.POST)
         if form.is_valid():
@@ -61,7 +61,7 @@ def signup_view(request):
     return render(request, 'index.html', {'form': form})
 
 
-def login_view(request):
+def login_view(request): # this funtion is for showing the login page for a user that have an account
     response_data = {}
     if request.method == "POST":
         form = LoginForm(request.POST)
@@ -132,11 +132,11 @@ def check_validation(request):
         return None
 
 
-def feed_view(request):
+def feed_view(request): # feed funtion is used to show posts of the user
     user = check_validation(request)
     if user:
 
-        posts = PostModel.objects.all().order_by('created_on')
+        posts = PostModel.objects.all().order_by('-created_on')
 
         for post in posts:
             existing_like = LikeModel.objects.filter(post_id=post.id, user=user).first()
